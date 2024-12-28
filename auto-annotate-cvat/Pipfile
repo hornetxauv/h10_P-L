@@ -59,6 +59,7 @@ tzdata = "==2024.2"
 ultralytics = "==8.3.53"
 ultralytics-thop = "==2.0.13"
 urllib3 = "==2.3.0"
+python-dotenv = "*"
 
 [dev-packages]
 
