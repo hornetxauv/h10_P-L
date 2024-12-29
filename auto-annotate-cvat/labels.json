@@ -1,0 +1,79 @@
+[
+  {
+    "name": "gate",
+    "id": 4097286,
+    "color": "#18fecd",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "gate-side-red",
+    "id": 4097287,
+    "color": "#8ae3cf",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "gate-side-green",
+    "id": 4097288,
+    "color": "#a22c7f",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "gate-top",
+    "id": 4097289,
+    "color": "#fafa37",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "orange-flare",
+    "id": 4097290,
+    "color": "#3df53d",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "red-flare",
+    "id": 4097291,
+    "color": "#28b982",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "yellow-flare",
+    "id": 4097292,
+    "color": "#3d3df5",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "blue-flare",
+    "id": 4097293,
+    "color": "#f3fcfa",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "blue-drum",
+    "id": 4097294,
+    "color": "#fafa37",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "red-drum",
+    "id": 4097295,
+    "color": "#66ff66",
+    "type": "rectangle",
+    "attributes": []
+  },
+  {
+    "name": "golf-ball",
+    "id": 4097296,
+    "color": "#808020",
+    "type": "rectangle",
+    "attributes": []
+  }
+]
