@@ -1,0 +1,1 @@
+for f in $(ls -v pooltest_bags/*.bag/*.db3); do ls "$f"; ros2 bag play "$f"; done
