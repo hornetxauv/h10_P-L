@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'detector = quali_gate_detector.detector:main',
-            'test = quali_gate_detector.quali_gate_detector:main'
+            'old_detector = quali_gate_detector.old_detector:main'
         ],
     },
 )
