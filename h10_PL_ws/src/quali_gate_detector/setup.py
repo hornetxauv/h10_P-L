@@ -1,6 +1,6 @@
 from setuptools import setup
 
-package_name = 'quali-gate-detector'
+package_name = 'quali_gate_detector'
 
 setup(
     name=package_name,
