@@ -63,7 +63,7 @@ class QualiGateDetector(Node):
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
             # "/left/compressed",
-            "/left/image_raw", #for live feed from v4l2
+            "/left/image_raw/compressed", #for live feed from v4l2
             self.image_feed_callback,
             10)
         self.bridge = CvBridge()
