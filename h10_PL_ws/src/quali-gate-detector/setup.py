@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'detector = quali-gate-detector.quali-gate-detector:main',
+            'detector = assignment3.detector:main',
+            'test = assignment3.quali_gate_detector:main'
         ],
     },
 )
