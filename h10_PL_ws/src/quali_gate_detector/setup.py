@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'detector = quali_gate_detector.detector:main',
             'old_detector = quali_gate_detector.old_detector:main'
+            'detector_listener = quali_date_detector.detector_listener:main'
         ],
     },
 )

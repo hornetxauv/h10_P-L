@@ -1,10 +1,12 @@
 from __future__ import print_function
+import math
+import cv2
+from cv_bridge import CvBridge
 import rclpy
 from rclpy.node import Node
 import threading
 from sensor_msgs.msg import Image, CompressedImage
-import cv2
-from cv_bridge import CvBridge
+from custom_msgs.msg import GateDetection
 from .control_panel import create_control_panel
 
 max_cnt_width = 200
@@ -33,18 +35,6 @@ values = {
 # value, maximum, smaller_than
 create_control_panel(values)
 
-taller_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (2, 21)) #tall and narrow kernel for the pole
-tall_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 18)) #tall and narrow kernel for the pole
-tallish_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (4, 12)) #tall and narrow kernel for the pole
-wide_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (12, 2)) #tall and narrow kernel for the pole
-normal_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7)) #tall and narrow kernel for the pole
-
-# def add_other_colour(original, input, low_SV, high_SV):
-#     if low_H_2 != high_H_2:
-#         other_colour_img = cv2.inRange(original, (low_H_2, *low_SV), (high_H_2, *high_SV))
-#         return cv2.bitwise_or(input, other_colour_img)
-#     return input
-
 # def custom_open(input):
 #     output = cv2.erode(input, taller_kernel, iterations=1)
 #     return cv2.dilate(output, tallish_kernel, iterations=2)
@@ -56,13 +46,14 @@ class QualiGateDetector(Node):
 
     def __init__(self):
         super().__init__("detector")
-        self.pub_debug_img = self.create_publisher(Image, "/detected/debug_img", 10)
-        self.pub_debug_img_2 = self.create_publisher(Image, "/detected/debug_img_2", 10)
-        self.pub_debug_img_3 = self.create_publisher(Image, "/detected/debug_img_3", 10)
-        self.pub_debug_img_4 = self.create_publisher(Image, "/detected/debug_img_4", 10)
+        self.pub_debug_img = self.create_publisher(Image, "/perc/debug_img", 10)
+        self.pub_debug_img_2 = self.create_publisher(Image, "/perc/debug_img_2", 10)
+        self.pub_debug_img_3 = self.create_publisher(Image, "/perc/debug_img_3", 10)
+        self.pub_debug_img_4 = self.create_publisher(Image, "/perc/debug_img_4", 10)
+        self.pub_gate_error = self.create_publisher(GateDetection, "/perc/quali_gate", 10)
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
-            # "/left/compressed",
+            # "/left/compressed", #for feed from session3 rosbag
             "/left/image_raw/compressed", #for live feed from v4l2
             self.image_feed_callback,
             10)
@@ -89,12 +80,11 @@ class QualiGateDetector(Node):
     def process_image(self, msg):
         if (msg == None):
             return
-        
-        # print(values)
 
         # Feel free to modify this callback function, or add other functions in any way you deem fit
         # Here is sample code for converting a coloured image to gray scale using opencv
         cv_img = self.bridge.compressed_imgmsg_to_cv2(msg)
+        img_height, img_width = cv_img.shape
         self.original_img = cv_img
         
         # https://docs.opencv.org/4.x/df/d9d/tutorial_py_colorspaces.html
@@ -129,8 +119,19 @@ class QualiGateDetector(Node):
         
         cnts = self.filter_contours(second_morph, False)
         bbox = self.draw_contours_and_bbox(bgr_clahe, cnts)
-        bbox, gate_centre = self.find_and_draw_centres(bbox, cnts)
+        centres = self.find_and_draw_centres(bbox, cnts)
+        bbox, gate_centre = self.find_and_draw_midpoint(bbox, centres)
+        distance = self.find_distance(centres)
         self.pub_img_4(bbox, encoding="bgr8")
+
+        if not gate_centre:
+            dy = None
+            dx = None
+        else:
+            dy = img_height/2 - gate_centre[0]
+            dx = img_width/2 - gate_centre[1]
+
+        self.pub_gate_error.publish(dy, dx, distance)
 
     def find_poles(self, frame):
         if values["min H"][0] < values["max H"][0]:
@@ -223,10 +224,6 @@ class QualiGateDetector(Node):
         return img
     
     def find_and_draw_centres(self, img, cnts, colour=(0, 0, 255)):
-        l=len(cnts)
-        if l != 2:
-            return img, None
-
         centres=[]
         for cnt in cnts:
             M = cv2.moments(cnt)
@@ -236,10 +233,26 @@ class QualiGateDetector(Node):
                 centre = (cx, cy)
                 centres.append(centre)
                 cv2.drawContours(img, [cnt], -1, colour, 2)
-                # cv2.circle(img, centre, 7, colour, -1)
+                cv2.circle(img, centre, 7, colour, -1)
                 # cv2.putText(img, "center", (cx - 20, cy - 20),
                 #         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
         
+        return centres
+    
+    def find_distance(self, centres):
+        dx=0
+        dy=0
+        x=centres[-1][0]
+        y=centres[-1][1]
+        for c in centres:
+            dx += abs(c[0]-x)
+            dy += abs(c[1]-y)
+        return math.sqrt(math.pow(dx, 2), math.pow(dy, 2))
+
+    def find_and_draw_midpoint(self, img, centres, colour=(0, 0, 255)):
+        l=len(centres)
+        # if l != 2:
+        #     return img, None
         x=0
         y=0
         for c in centres:
