@@ -36,7 +36,19 @@ But of course, lets try to do it offline. Follow the instructions at the [CVAT i
 Next, follow [the automatic annotation installation guide](https://docs.cvat.ai/docs/administration/advanced/installation_automatic_annotation/) (copied at [./docs/installation_automatic_annotation.md](./docs/installation_automatic_annotation.md)) up till this line:
 > sudo ln -sf $(pwd)/nuctl-<version>-linux-amd64 /usr/local/bin/nuctl
 
-Finally, follow the [serverless tutorial](https://docs.cvat.ai/docs/manual/advanced/serverless-tutorial/) (copied at [./docs/serverless-tutorial.md](./docs/serverless-tutorial.md)) ... @Hsu fill the deets thanks
+To deploy Transt using cpu run:
+> ./serverless/deploy_cpu.sh serverless/pytorch/dschoerk/transt/nuclio
+
+Or to deploy Transt using a cuda enabled nvidia gpu (Nvidia Container Toolkit should be installed, if not see [nvidia container toolkit installation](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)):
+> ./serverless/deploy_gpu.sh serverless/pytorch/dschoerk/transt/nuclio
+
+To check that the nuclio function is running, run ```nuctl get functions```, and check that it is deployed.
+```
+ NAMESPACE | NAME                  | PROJECT | STATE | REPLICAS | NODE PORT 
+ nuclio    | pth-dschoerk-transt   | cvat    | ready | 1/1      | 32773  
+```
+
+[Optional] For more information see the [serverless tutorial](https://docs.cvat.ai/docs/manual/advanced/serverless-tutorial/) (copied at [./docs/serverless-tutorial.md](./docs/serverless-tutorial.md))
 
 ## Creating a project, task and job
 CVAT organises your work into projects, tasks and jobs. Projects contains tasks, which contain datasets and jobs. Jobs will contain a subset of the parent task's dataset, which is what you will be annotating.
