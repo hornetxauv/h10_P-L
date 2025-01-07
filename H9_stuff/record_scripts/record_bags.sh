@@ -23,10 +23,11 @@ filename=$(printf "$filename_template" "$next_number")
 
 # ros2 bag record -o "$filename" /debug/bgr/compressed
 # ros2 bag record -o "$filename" /bottom/image_raw
-ros2 bag record -o "$filename" /bottom/rect/image
+# ros2 bag record -o "$filename" /bottom/rect/image
 # `ros2 bag record -o "$filename" /bottom/rect/image orange_flare/bgr/compressed
 # ros2 bag record -o "$filename" /bottom/rect/detections_output /sensors/imu/corrected /sensors/depth
 # ros2 bag record -o "$filename" /bgr/compressed
+ros2 bag record -o "$filename" /left/image_raw /perc/debug_img_4 /perc/quali_gate
 # ros2 bag record -o "$filename" /left/image_raw /right/image_raw # INSERT TOPIC FOR GATE BEARING , DISTANCE, AND TILT ANGLE
 # ros2 bag record -o "$filename" /bottom/image_raw /sensors/imu # INSERT TOPIC FOR GATE BEARING , DISTANCE, AND TILT ANGLE
 # ros2 bag record -o "$filename" /left/image_raw /left/image_rect_color /left/yolo/box
