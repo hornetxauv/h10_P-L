@@ -24,6 +24,6 @@ if(BUILD_TESTING)
 endif()
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/ChatMessage.msg"
+  "msg/GateDetection.msg"
 )
 ament_package()

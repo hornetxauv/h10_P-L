@@ -15,8 +15,8 @@ class QualiGateListener(Node):
         # self.bridge = CvBridge()
 
     def gate_detected_callback(self, detection):
-        dx, dy, distance = detection
-        print(dx, dy, distance)
+        detection
+        print(detection)
 
 def main(args=None):
 
