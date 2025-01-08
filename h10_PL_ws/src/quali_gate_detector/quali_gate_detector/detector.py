@@ -8,7 +8,7 @@ import threading
 from sensor_msgs.msg import Image, CompressedImage
 from custom_msgs.msg import GateDetection
 from .control_panel import create_control_panel
-
+#
 max_cnt_width = 200
 min_cnt_height = 40
 min_cnt_area = 500
