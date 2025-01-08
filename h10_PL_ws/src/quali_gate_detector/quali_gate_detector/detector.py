@@ -6,6 +6,7 @@ import rclpy
 from rclpy.node import Node
 import threading
 from sensor_msgs.msg import Image, CompressedImage
+from std_msgs.msg import Float32MultiArray
 from custom_msgs.msg import GateDetection
 from .control_panel import create_control_panel
 
@@ -14,7 +15,7 @@ min_cnt_height = 40
 min_cnt_area = 500
 
 values = {
-    'max cnt w': [60, 200],
+    'max cnt w': [90, 200],
     'min cnt h': [120, 200],
     'clahe limit': [10, 50],
     'erosion first': [1, 1],
@@ -50,7 +51,10 @@ class QualiGateDetector(Node):
         self.pub_debug_img_2 = self.create_publisher(Image, "/perc/debug_img_2", 10)
         self.pub_debug_img_3 = self.create_publisher(Image, "/perc/debug_img_3", 10)
         self.pub_debug_img_4 = self.create_publisher(Image, "/perc/debug_img_4", 10)
-        self.pub_gate_detection = self.create_publisher(GateDetection, "/perc/quali_gate", 10)
+        self.pub_gate_detection = self.create_publisher(
+            # GateDetection,
+            Float32MultiArray,
+            "/perc/quali_gate", 10)
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
             "/left/compressed", #for feed from session3 rosbag
@@ -126,9 +130,12 @@ class QualiGateDetector(Node):
         if gate_centre:
             msg = GateDetection()
             msg.distance = float(self.find_distance(centres))
-            msg.dy = float(img_height/2 - gate_centre[0])
-            msg.dx = float(img_width/2 - gate_centre[1])
-            self.pub_gate_detection.publish(msg)
+            msg.dx = float(img_width/2 - gate_centre[0])
+            msg.dy = float(img_height/2 - gate_centre[1])
+            # self.pub_gate_detection.publish(msg)
+            array_msg = Float32MultiArray()
+            array_msg.data=[msg.dx, msg.dy, msg.distance]
+            self.pub_gate_detection.publish(array_msg)
 
     def find_poles(self, frame):
         if values["min H"][0] < values["max H"][0]:

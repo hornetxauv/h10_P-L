@@ -3,12 +3,14 @@ from __future__ import print_function
 import rclpy
 from rclpy.node import Node
 from custom_msgs.msg import GateDetection
+from std_msgs.msg import Float32MultiArray
 
 class QualiGateListener(Node):
     def __init__(self):
         super().__init__("listener")
         self.sub_gate_detection = self.create_subscription(
-            GateDetection,
+            # GateDetection,
+            Float32MultiArray,
             "/perc/quali_gate",
             self.gate_detected_callback,
             10)
