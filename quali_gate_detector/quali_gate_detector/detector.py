@@ -136,6 +136,10 @@ class QualiGateDetector(Node):
             array_msg = Float32MultiArray()
             array_msg.data=[msg.dx, msg.dy, msg.distance]
             self.pub_gate_detection.publish(array_msg)
+        else:
+            array_msg = Float32MultiArray()
+            array_msg.data=[0.0,0.0,0.0]
+            self.pub_gate_detection.publish(array_msg)
 
     def find_poles(self, frame):
         if values["min H"][0] < values["max H"][0]:
