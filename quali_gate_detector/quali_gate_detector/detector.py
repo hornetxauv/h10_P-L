@@ -4,7 +4,7 @@ import cv2
 from cv_bridge import CvBridge
 import rclpy
 from rclpy.node import Node
-import threading
+# import threading
 from sensor_msgs.msg import Image, CompressedImage
 from std_msgs.msg import Float32MultiArray
 from custom_msgs.msg import GateDetection
@@ -57,18 +57,14 @@ class QualiGateDetector(Node):
             "/perc/quali_gate", 10)
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
-            "/left/compressed", #for feed from session3 rosbag
-            # "/left/image_raw/compressed", #for live feed from v4l2
+            # "/left/compressed", #for feed from session3 rosbag
+            "/left/image_raw/compressed", #for live feed from v4l2
             self.image_feed_callback,
             10)
         self.bridge = CvBridge()
 
         timer_period = 0.5
         self.timer = self.create_timer(timer_period, self.when_not_playing)
-
-        input_thread = threading.Thread(target=cv2.waitKey)
-        input_thread.daemon = True
-        input_thread.start()
 
     def image_feed_callback(self, msg):
         self.process_image(msg)
