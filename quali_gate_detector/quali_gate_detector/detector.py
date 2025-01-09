@@ -33,7 +33,7 @@ values = {
     'max V': [160],
 }
 # value, maximum, smaller_than
-create_control_panel(values)
+create_control_panel("Quali gate thresholds",values)
 
 # def custom_open(input):
 #     output = cv2.erode(input, taller_kernel, iterations=1)
