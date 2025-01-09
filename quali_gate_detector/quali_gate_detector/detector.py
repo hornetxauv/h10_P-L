@@ -4,11 +4,10 @@ import cv2
 from cv_bridge import CvBridge
 import rclpy
 from rclpy.node import Node
-# import threading
 from sensor_msgs.msg import Image, CompressedImage
 from std_msgs.msg import Float32MultiArray
 from custom_msgs.msg import GateDetection
-from .control_panel import create_control_panel
+from control_panel.control_panel import create_control_panel
 
 max_cnt_width = 200
 min_cnt_height = 40
