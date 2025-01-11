@@ -5,7 +5,6 @@ from cv_bridge import CvBridge
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-# from std_msgs.msg import Float32MultiArray
 from custom_msgs.msg import GateDetection
 from control_panel.control_panel import create_control_panel, ControlPanelItem as CPI
 
@@ -32,7 +31,6 @@ values = {
     'min V': CPI(value=0),
     'max V': CPI(value=160),
 }
-# value, maximum, smaller_than
 create_control_panel("Quali gate thresholds",values)
 
 # def custom_open(input):
@@ -52,7 +50,6 @@ class QualiGateDetector(Node):
         self.pub_debug_img_4 = self.create_publisher(Image, "/perc/debug_img_4", 10)
         self.pub_gate_detection = self.create_publisher(
             GateDetection,
-            # Float32MultiArray,
             "/perc/quali_gate", 10)
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
