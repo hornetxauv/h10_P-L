@@ -5,32 +5,32 @@ from cv_bridge import CvBridge
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image, CompressedImage
-from std_msgs.msg import Float32MultiArray
+# from std_msgs.msg import Float32MultiArray
 from custom_msgs.msg import GateDetection
-from control_panel.control_panel import create_control_panel
+from control_panel.control_panel import create_control_panel, ControlPanelItem as CPI
 
 max_cnt_width = 200
 min_cnt_height = 40
 min_cnt_area = 500
 
 values = {
-    'max cnt w': [90, 200],
-    'min cnt h': [120, 200],
-    'clahe limit': [10, 50],
-    'erosion first': [1, 1],
-    'morph iterations': [5, 10],
-    'erosion iterations': [1, 10],
-    'e kernal w': [1, 15, 1],
-    'e kernal h': [5, 15, 1],
-    'dilation iterations': [2, 10],
-    'd kernal w': [2, 15, 1],
-    'd kernal h': [5, 15, 1],
-    'min H': [250, 360],
-    'max H': [23, 360],
-    'min S': [60],
-    'max S': [255],
-    'min V': [0],
-    'max V': [160],
+    'max cnt w': CPI(value=90, maximum=200),
+    'min cnt h': CPI(value=120, maximum=200),
+    'clahe limit': CPI(value=10, maximum=50),
+    'erosion first': CPI(value=1, maximum=1),
+    'morph iterations': CPI(value=5, maximum=10),
+    'erosion iterations': CPI(value=1, maximum=10),
+    'e kernal w': CPI(value=1, maximum=15, minimum=1),
+    'e kernal h': CPI(value=5, maximum=15, minimum=1),
+    'dilation iterations': CPI(value=2, maximum=10),
+    'd kernal w': CPI(value=2, maximum=15, minimum=1),
+    'd kernal h': CPI(value=5, maximum=15, minimum=1),
+    'min H': CPI(value=250, maximum=360),
+    'max H': CPI(value=23, maximum=360),
+    'min S': CPI(value=60),
+    'max S': CPI(value=255),
+    'min V': CPI(value=0),
+    'max V': CPI(value=160),
 }
 # value, maximum, smaller_than
 create_control_panel("Quali gate thresholds",values)
@@ -51,13 +51,13 @@ class QualiGateDetector(Node):
         self.pub_debug_img_3 = self.create_publisher(Image, "/perc/debug_img_3", 10)
         self.pub_debug_img_4 = self.create_publisher(Image, "/perc/debug_img_4", 10)
         self.pub_gate_detection = self.create_publisher(
-            # GateDetection,
-            Float32MultiArray,
+            GateDetection,
+            # Float32MultiArray,
             "/perc/quali_gate", 10)
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
-            # "/left/compressed", #for feed from session3 rosbag
-            "/left/image_raw/compressed", #for live feed from v4l2
+            "/left/compressed", #for feed from session3 rosbag
+            # "/left/image_raw/compressed", #for live feed from v4l2
             self.image_feed_callback,
             10)
         self.bridge = CvBridge()
@@ -94,7 +94,7 @@ class QualiGateDetector(Node):
 
         # Applying CLAHE to L-channel
         # feel free to try different values for the limit and grid size:
-        clahe = cv2.createCLAHE(clipLimit=values['clahe limit'][0]/10, tileGridSize=(8,8))
+        clahe = cv2.createCLAHE(clipLimit=values['clahe limit']['value']/10, tileGridSize=(8,8))
         cl = clahe.apply(v)
 
         # merge the CLAHE enhanced L-channel with the a and b channel
@@ -105,8 +105,8 @@ class QualiGateDetector(Node):
         poles_mask = self.find_poles(hsv_clahe)
         self.pub_img(poles_mask)#, encoding="bgr8")
 
-        erode_first = values['erosion first'][0]
-        morph_iterations = values['morph iterations'][0]
+        erode_first = values['erosion first']['value']
+        morph_iterations = values['morph iterations']['value']
         second_morph = poles_mask
 
         for i in range(morph_iterations):
@@ -122,37 +122,41 @@ class QualiGateDetector(Node):
         bbox, gate_centre = self.find_and_draw_midpoint(bbox, centres)
         self.pub_img_4(bbox, encoding="bgr8")
 
+        msg = GateDetection()
+        msg.width = 0.0
+        msg.dx = 0.0
+        msg.dy = 0.0
+
         if gate_centre:
-            msg = GateDetection()
-            msg.distance = float(self.find_distance(centres))
+            msg.width = float(self.find_distance(centres))
             msg.dx = float(img_width/2 - gate_centre[0])
             msg.dy = float(img_height/2 - gate_centre[1])
-            # self.pub_gate_detection.publish(msg)
-            array_msg = Float32MultiArray()
-            array_msg.data=[msg.dx, msg.dy, msg.distance]
-            self.pub_gate_detection.publish(array_msg)
-        else:
-            array_msg = Float32MultiArray()
-            array_msg.data=[0.0,0.0,0.0]
-            self.pub_gate_detection.publish(array_msg)
+            # array_msg = Float32MultiArray()
+            # array_msg.data=[msg.dx, msg.dy, msg.distance]
+            # self.pub_gate_detection.publish(array_msg)
+        # else:
+        #     array_msg = Float32MultiArray()
+        #     array_msg.data=[0.0,0.0,0.0]
+        #     self.pub_gate_detection.publish(array_msg)
+        self.pub_gate_detection.publish(msg)
 
     def find_poles(self, frame):
-        if values["min H"][0] < values["max H"][0]:
-            return cv2.inRange(frame, (values["min H"][0]/2, values["min S"][0], values["min V"][0]), (values["max H"][0]/2, values["max S"][0], values["max V"][0]))
+        if values["min H"]['value'] < values["max H"]['value']:
+            return cv2.inRange(frame, (values["min H"]['value']/2, values["min S"]['value'], values["min V"]['value']), (values["max H"]['value']/2, values["max S"]['value'], values["max V"]['value']))
         # divide the H values by 2 because our slider is 0-360 but cv2 takes 0-180
         else:
-            first = cv2.inRange(frame, (0, values["min S"][0], values["min V"][0]), (values["max H"][0]/2, values["max S"][0], values["max V"][0]))
-            second = cv2.inRange(frame, (values['min H'][0]/2, values["min S"][0], values["min V"][0]), (values["min H"][1]/2, values["max S"][0], values["max V"][0]))
+            first = cv2.inRange(frame, (0, values["min S"]['value'], values["min V"]['value']), (values["max H"]['value']/2, values["max S"]['value'], values["max V"]['value']))
+            second = cv2.inRange(frame, (values['min H']['value']/2, values["min S"]['value'], values["min V"]['value']), (values["min H"]['maximum']/2, values["max S"]['value'], values["max V"]['value']))
             return cv2.bitwise_or(first, second)
 
     def erode(self, mask):
-        erosion_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (values['e kernal w'][0], values['e kernal h'][0]))
-        eroded = cv2.erode(mask, erosion_kernel, iterations=values['erosion iterations'][0])
+        erosion_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (values['e kernal w']['value'], values['e kernal h']['value']))
+        eroded = cv2.erode(mask, erosion_kernel, iterations=values['erosion iterations']['value'])
         return eroded
     
     def dilate(self, mask):
-        dilation_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (values['d kernal w'][0], values['d kernal h'][0]))
-        dilated = cv2.dilate(mask, dilation_kernel, iterations=values['dilation iterations'][0])
+        dilation_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (values['d kernal w']['value'], values['d kernal h']['value']))
+        dilated = cv2.dilate(mask, dilation_kernel, iterations=values['dilation iterations']['value'])
         return dilated
 
     def filter_contours(self, mask, remove_top=True):
@@ -172,7 +176,7 @@ class QualiGateDetector(Node):
         def filter_by_dimensions(cnt):
             _, _, w, h = cv2.boundingRect(cnt)
             # print(w,h)
-            return (w < values['max cnt w'][0] and h > values['min cnt h'][0])
+            return (w < values['max cnt w']['value'] and h > values['min cnt h']['value'])
         cnts = list(filter(lambda c: filter_by_dimensions(c), cnts))
         # print("3",[cv2.contourArea(i) for i in cnts])
         # remove contours in top 30% of image
