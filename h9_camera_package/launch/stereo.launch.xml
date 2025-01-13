@@ -1,0 +1,16 @@
+<launch>
+
+    <node pkg="v4l2_camera" exec="v4l2_camera_node" name="left" output="screen">
+        <param name="video_device" value="/dev/video2" />
+        <param name="camera_info_url" value="file://src/camera/calibration/calibrationdata/left.yaml"/>
+    </node>
+    <node pkg="v4l2_camera" exec="v4l2_camera_node" name="right" output="screen">
+        <param name="video_device" value="/dev/video4" />
+        <param name="camera_info_url" value="file://src/camera/calibration/calibrationdata/right.yaml"/>
+    </node>
+    <node pkg="v4l2_camera" exec="v4l2_camera_node" name="bottom" output="screen">
+        <param name="video_device" value="/dev/video6" />
+        <param name="camera_info_url" value="file://src/camera/calibration/calibrationdata/bottom.yaml"/>
+    </node>
+
+</launch>        
