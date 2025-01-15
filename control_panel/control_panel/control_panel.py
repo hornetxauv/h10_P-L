@@ -1,12 +1,12 @@
 import cv2
 import threading
-from typing import Optional, TypedDict
+from typing import Optional, TypedDict, Union
 from operator import itemgetter
 
 class ControlPanelItem():
-    value: float | int
-    maximum: Optional[float | int]
-    minimum: Optional[float | int]
+    value: Union[float, int]
+    maximum: Optional[Union[float, int]]
+    minimum: Optional[Union[float, int]]
     multiplier: Optional[int]
     set_to_int: Optional[bool]
 
@@ -25,7 +25,7 @@ class ControlPanelItem():
 # a=ControlPanelItem(value=1)
 # a.get('maximum')
 
-def create_control_panel(control_panel_name: str, controls: dict[str, ControlPanelItem]):
+def create_control_panel(control_panel_name: str, controls, **kwargs):#: dict[str, ControlPanelItem]):
     cv2.namedWindow(control_panel_name)
     for control in controls.items():
         name, v = control
@@ -52,6 +52,12 @@ def create_control_panel(control_panel_name: str, controls: dict[str, ControlPan
             int(v.maximum*v.multiplier), 
             on_change
         )
-    input_thread = threading.Thread(target=cv2.waitKey)
-    input_thread.daemon = True
-    input_thread.start()
+    print(kwargs)
+    no_new_thread = kwargs.get("no_new_thread") or False
+    print(no_new_thread)
+    if not no_new_thread:
+        input_thread = threading.Thread(target=cv2.waitKey)
+        input_thread.daemon = True
+        input_thread.start()
+
+# create_control_panel('asd',{})
