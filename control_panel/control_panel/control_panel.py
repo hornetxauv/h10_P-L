@@ -27,7 +27,7 @@ class ControlPanelItem():
 
 def create_control_panel(control_panel_name: str, controls, **kwargs):#: dict[str, ControlPanelItem]):
     cv2.namedWindow(control_panel_name)
-    cv2.resizeWindow(control_panel_name, 1000, 2000)
+    cv2.resizeWindow(control_panel_name, 700, 1500)
     for control in controls.items():
         name, v = control
         # default_value = None
@@ -45,7 +45,7 @@ def create_control_panel(control_panel_name: str, controls, **kwargs):#: dict[st
             val = val/multiplier
             if val < minimum:
                 val = minimum
-            controls[name].value = val if v.set_to_int else int(val)
+            controls[name].value = val if not v.set_to_int else round(val)
         cv2.createTrackbar(
             name, 
             control_panel_name, 
