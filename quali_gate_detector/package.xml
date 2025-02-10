@@ -18,6 +18,8 @@
   <depend>opencv2</depend>
   <depend>cv_bridge</depend>
   <depend>image_transport</depend>
+  <depend>torch</depend>
+  <depend>torchvision</depend>
 
   <export>
     <build_type>ament_python</build_type>

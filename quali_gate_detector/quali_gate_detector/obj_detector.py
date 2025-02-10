@@ -1,9 +1,8 @@
 # from __future__ import print_function
 # import math
 # https://github.com/computervisioneng/train-yolov8-custom-dataset-step-by-step-guide/blob/master/local_env/predict_video.py
-from ultralytics import YOLO
+import ultralytics
 import numpy as np # need numpy < 2 https://stackoverflow.com/questions/71689095/how-to-solve-the-pytorch-runtimeerror-numpy-is-not-available-without-upgrading
-import argparse
 
 import cv2
 from cv_bridge import CvBridge
@@ -14,7 +13,8 @@ from custom_msgs.msg import GateDetection
 # from control_panel.control_panel import create_control_panel, ControlPanelItem as CPI
 
 detection_interval = 4
-model_path = '/home/bb/ros_workspaces_h10_workspace/h9.onnx'
+#model_path = '/home/bb/ros_workspaces/h10_workspace/h9.onnx'
+model_path = '/home/bb/ros_workspaces/h10_workspace/front_yolov8n_070424_1.engine'
 threshold = 0.5
 
 class ObjDetector(Node):
@@ -25,15 +25,20 @@ class ObjDetector(Node):
 
     def __init__(self):
         super().__init__("detector")
-        self.model = YOLO(model_path, task="detect")
+        self.get_logger().info("init")
+        self.get_logger().info(ultralytics.__version__)
+        #self.model = ultralytics.YOLO(model_path, task="detect")
+        # Load the exported TensorRT model
+        self.model = ultralytics.YOLO(model_path)
         self.pub_debug_img = self.create_publisher(Image, "/perc/debug_img", 10)
         self.pub_detection = self.create_publisher(
             GateDetection,
             "/perc/obj_detection", 10)
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
-            "/left/compressed", #for feed from session3 rosbag
-            # "/left/image_raw/compressed", #for live feed from v4l2
+            # "/left/image_raw", #for feed from session3 rosbag
+            # "/left/compressed", #for feed from session3 rosbag
+            "/left/image_raw/compressed", #for live feed from v4l2
             self.image_feed_callback,
             10)
         self.bridge = CvBridge()
@@ -63,7 +68,7 @@ class ObjDetector(Node):
         # Here is sample code for converting a coloured image to gray scale using opencv
         cv_img = self.bridge.compressed_imgmsg_to_cv2(msg)
         img_height, img_width, channels = cv_img.shape
-        self.get_logger().info(img_height, img_width)
+        self.get_logger().info(f"img_height: {img_height}, img_width: {img_width}")
         self.original_img = cv_img
         
         # # https://docs.opencv.org/4.x/df/d9d/tutorial_py_colorspaces.html
@@ -82,16 +87,17 @@ class ObjDetector(Node):
         # bgr_clahe = cv2.cvtColor(hsv_clahe, cv2.COLOR_HSV2BGR)
         # # self.pub_img(bgr_clahe, encoding="bgr8")
         
-        results = self.model.predict(self.original_img, imgsz=[480, 640])[0]
+        results = self.model.predict(self.original_img, imgsz=[640, 640])[0]
         
         for result in results.boxes.data.tolist():
             x1, y1, x2, y2, score, class_id = result
 
-        if score > threshold:
-            cv2.rectangle(cv_img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 4)
-            cv2.putText(cv_img, results.names[int(class_id)].upper(), (int(x1), int(y1 - 10)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 255, 0), 3, cv2.LINE_AA)
-            self.pub_img(cv_img, encoding="bgr8")
+        if (len(results) > 0):
+            if score > threshold:
+                cv2.rectangle(cv_img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 4)
+                cv2.putText(cv_img, results.names[int(class_id)].upper(), (int(x1), int(y1 - 10)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 255, 0), 3, cv2.LINE_AA)
+        self.pub_img(cv_img, encoding="bgr8")
     
     def draw_contours_and_bbox(self, img, cnts, label=None, colour=(0, 255, 0)):
         for cnt in cnts:
