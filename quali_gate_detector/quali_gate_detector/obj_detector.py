@@ -33,7 +33,7 @@ class ObjDetector(Node):
         self.pub_debug_img = self.create_publisher(Image, "/perc/debug_img", 10)
         self.pub_detection = self.create_publisher(
             GateDetection,
-            "/perc/obj_detection", 10)
+            "/perc/quali_gate", 10)
         self.sub_image_feed = self.create_subscription(
             CompressedImage,
             # "/left/image_raw", #for feed from session3 rosbag
