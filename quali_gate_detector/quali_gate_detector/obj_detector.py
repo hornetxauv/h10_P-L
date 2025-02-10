@@ -29,7 +29,7 @@ class ObjDetector(Node):
         self.get_logger().info(ultralytics.__version__)
         #self.model = ultralytics.YOLO(model_path, task="detect")
         # Load the exported TensorRT model
-        self.model = ultralytics.YOLO(model_path)
+        self.model = ultralytics.YOLO(model_path, task="detect")
         self.pub_debug_img = self.create_publisher(Image, "/perc/debug_img", 10)
         self.pub_detection = self.create_publisher(
             GateDetection,
@@ -92,11 +92,31 @@ class ObjDetector(Node):
         for result in results.boxes.data.tolist():
             x1, y1, x2, y2, score, class_id = result
 
-        if (len(results) > 0):
+        #if (len(results) > 0):
             if score > threshold:
-                cv2.rectangle(cv_img, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 4)
-                cv2.putText(cv_img, results.names[int(class_id)].upper(), (int(x1), int(y1 - 10)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1.3, (0, 255, 0), 3, cv2.LINE_AA)
+                name = results.names[int(class_id)].upper()
+                colour = (0, 255, 0)
+                cv2.rectangle(cv_img, (int(x1), int(y1)), (int(x2), int(y2)), colour, 4)
+                cv2.putText(cv_img, name, (int(x1), int(y1 - 10)),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.3, colour, 3, cv2.LINE_AA)
+
+                self.get_logger().info(f"detected {name}")
+                if name == "GATE":
+                    gate_centre = [(x1+x2)/2, (y1+y2)/2]
+                    cv2.circle(cv_img, [int(i) for i in gate_centre], 7, colour, -1)
+
+                    msg = GateDetection()
+                    msg.width = 0.0
+                    msg.dx = 0.0
+                    msg.dy = 0.0
+
+                    #if gate_centre:
+                    msg.width = float(x2-x1)
+                    msg.dx = float(img_width/2 - gate_centre[0])
+                    msg.dy = float(img_height/2 - gate_centre[1])
+                    self.get_logger().info("pub detection")
+                    self.pub_detection.publish(msg)
+        
         self.pub_img(cv_img, encoding="bgr8")
     
     def draw_contours_and_bbox(self, img, cnts, label=None, colour=(0, 255, 0)):
