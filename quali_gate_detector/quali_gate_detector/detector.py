@@ -114,15 +114,16 @@ class QualiGateDetector(Node):
         self.pub_img_3(second_morph)#, encoding="bgr8")
         
         cnts = self.filter_contours(second_morph, False)
-        bbox = self.draw_contours_and_bbox(bgr_clahe, cnts)
-        centres = self.find_and_draw_centres(bbox, cnts)
-        bbox, gate_centre = self.find_and_draw_midpoint(bbox, centres)
-        self.pub_img_4(bbox, encoding="bgr8")
+        (drawn_img, bbox_heights) = self.draw_contours_and_bbox(bgr_clahe, cnts)
+        centres = self.find_and_draw_centres(drawn_img, cnts)
+        drawn_img, gate_centre = self.find_and_draw_midpoint(drawn_img, centres)
+        self.pub_img_4(drawn_img, encoding="bgr8")
 
         msg = GateDetection()
         msg.width = 0.0
         msg.dx = 0.0
         msg.dy = 0.0
+        msg.sides_ratio = 0.0
 
         if gate_centre:
             msg.width = float(self.find_distance(centres))
@@ -135,6 +136,11 @@ class QualiGateDetector(Node):
         #     array_msg = Float32MultiArray()
         #     array_msg.data=[0.0,0.0,0.0]
         #     self.pub_gate_detection.publish(array_msg)
+
+        if len(bbox_heights) == 2:
+            if bbox_heights[0] != 0 and bbox_heights[1] != 0:
+                msg.sides_ratio = float(bbox_heights[0]/bbox_heights[1])
+
         self.pub_gate_detection.publish(msg)
 
     def find_poles(self, frame):
@@ -213,9 +219,11 @@ class QualiGateDetector(Node):
         return cnts
     
     def draw_contours_and_bbox(self, img, cnts, label=None, colour=(0, 255, 0)):
+        bbox_heights = []
         for cnt in cnts:
             img = cv2.drawContours(img, cnt, -1, (0,255,0), 1)
             x,y,w,h = cv2.boundingRect(cnt)
+            bbox_heights.append(h)
             img = cv2.rectangle(img, (x, y), (x + w, y + h), colour, 3)
 
             dimensionsStr = f'({w}, {h}); {str(cv2.contourArea(cnt))}'
@@ -225,7 +233,7 @@ class QualiGateDetector(Node):
                 label = dimensionsStr
             img = cv2.putText(img, label, (x+10, y-10), 0, 1, colour, 2)
         
-        return img
+        return (img, bbox_heights)
     
     def find_and_draw_centres(self, img, cnts, colour=(0, 0, 255)):
         centres=[]
