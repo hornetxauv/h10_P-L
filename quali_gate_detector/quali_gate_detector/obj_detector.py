@@ -114,6 +114,7 @@ class ObjDetector(Node):
                     msg.width = float(x2-x1)
                     msg.dx = float(img_width/2 - gate_centre[0])
                     msg.dy = float(img_height/2 - gate_centre[1])
+                    msg.sides_ratio = 1.0 #ML won't be able to give us sides ratio for now
                     self.get_logger().info("pub detection")
                     self.pub_detection.publish(msg)
         
